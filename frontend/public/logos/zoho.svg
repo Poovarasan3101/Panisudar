@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <rect width="120" height="120" rx="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+  <!-- Red Block -->
+  <rect x="24" y="28" width="32" height="30" rx="6" fill="#eb2127" />
+  <!-- Green Block -->
+  <rect x="64" y="28" width="32" height="30" rx="6" fill="#439b44" />
+  <!-- Blue Block -->
+  <rect x="24" y="64" width="32" height="30" rx="6" fill="#0080cb" />
+  <!-- Yellow Block -->
+  <rect x="64" y="64" width="32" height="30" rx="6" fill="#fdb813" />
+</svg>

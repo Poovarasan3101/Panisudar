@@ -1,0 +1,194 @@
+/* ==========================================================================
+   IntroScreen.css — One-Time Website Splash Screen Intro
+   Ultra-fast timeline:
+   0ms - 350ms: Smooth subtle entrance
+   350ms - 650ms: Brief presence
+   650ms - 1000ms: Smooth fade/slide exit
+   1000ms: Unmounted from DOM completely
+   ========================================================================== */
+
+.intro-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #06080d;
+  background: radial-gradient(ellipse at 50% 50%, #0d121d 0%, #05070a 100%);
+  pointer-events: all;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 350ms cubic-bezier(0.16, 1, 0.3, 1), transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle architectural frame around the viewport */
+.intro-screen-frame {
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 10;
+  animation: introFrameIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 768px) {
+  .intro-screen-frame {
+    inset: 24px;
+    border-radius: 16px;
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* Top watermark / branding badge */
+.intro-screen-badge {
+  position: absolute;
+  top: 36px;
+  left: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(165, 180, 252, 0.55);
+  z-index: 20;
+}
+
+.intro-screen-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #6366f1;
+  box-shadow: 0 0 8px #6366f1;
+}
+
+/* Center Content */
+.intro-screen-content {
+  position: relative;
+  z-index: 20;
+  max-width: 90vw;
+  width: 100%;
+  padding: 0 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: introContentIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 350ms cubic-bezier(0.16, 1, 0.3, 1), transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtitle */
+.intro-screen-subtitle {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-top: 14px;
+  opacity: 0.9;
+}
+
+@media (min-width: 768px) {
+  .intro-screen-subtitle {
+    font-size: 14px;
+    letter-spacing: 0.4em;
+    margin-top: 18px;
+  }
+}
+
+/* Main Title: Large Bold with Metallic/Gradient Effect */
+.intro-screen-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0;
+  max-width: 1100px;
+  font-size: clamp(2.2rem, 7.5vw, 6.5rem);
+}
+
+.intro-screen-title .blur-text-word {
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #e2e8f0 30%,
+    #a5b4fc 60%,
+    #f8fafc 85%,
+    #ffffff 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+  padding: 0 4px;
+}
+
+/* Ambient glow */
+.intro-screen-glow {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, rgba(0, 0, 0, 0) 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Exiting state: starts around 3400ms, finishes at 4000ms (4s) */
+.intro-screen-overlay.exiting {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  transition: opacity 600ms cubic-bezier(0.7, 0, 0.84, 0), transform 600ms cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+.intro-screen-overlay.exiting .intro-screen-content {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 550ms cubic-bezier(0.7, 0, 0.84, 0), transform 550ms cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+/* Entrance Animations */
+@keyframes introFrameIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes introContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .intro-screen-overlay,
+  .intro-screen-frame,
+  .intro-screen-content {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
+}
