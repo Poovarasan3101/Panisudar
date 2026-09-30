@@ -48,7 +48,7 @@ export default function SavedJobs() {
   const handleUnsave = async (jobId, title) => {
     try {
       await profileService.unsaveJob(jobId);
-      setSavedJobs((prev) => prev.filter((j) => j.id !== jobId));
+      setSavedJobs((prev) => prev.filter((j) => String(j.id) !== String(jobId)));
       toast.info('Removed', `"${title}" has been removed from your saved list.`);
     } catch (err) {
       toast.error('Error', 'Failed to remove job from saved list.');

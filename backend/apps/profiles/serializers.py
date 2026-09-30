@@ -134,11 +134,90 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
 class ApplicationSerializer(serializers.ModelSerializer):
     job_details = JobSerializer(source='job', read_only=True)
     applicant_name = serializers.CharField(source='applicant.full_name', read_only=True)
+    applicant_email = serializers.CharField(source='applicant.email', read_only=True)
 
     class Meta:
         model = Application
         fields = '__all__'
         read_only_fields = ('applicant',)
+
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        if 'jobId' in data and 'job' not in data:
+            data['job'] = data['jobId']
+        elif 'job_id' in data and 'job' not in data:
+            data['job'] = data['job_id']
+        if 'coverLetter' in data and 'cover_letter' not in data:
+            data['cover_letter'] = data['coverLetter']
+        return super().to_internal_value(data)
+
+    def to_representation(self, obj):
+        ret = super().to_representation(obj)
+        request = self.context.get('request')
+        
+        # Resolve seeker profile details if available
+        profile = getattr(obj.applicant, 'seeker_profile', None)
+        
+        photo_url = None
+        resume_url = None
+        skills = []
+        experience = []
+        education = []
+        phone = ''
+        about = ''
+        location = ''
+        resume_name = ''
+
+        if profile:
+            if profile.photo:
+                try:
+                    photo_url = request.build_absolute_uri(profile.photo.url) if request else profile.photo.url
+                except Exception:
+                    photo_url = profile.photo.url
+            if profile.resume:
+                try:
+                    resume_url = request.build_absolute_uri(profile.resume.url) if request else profile.resume.url
+                except Exception:
+                    resume_url = profile.resume.url
+            resume_name = profile.resume_name or ''
+            skills = profile.skills if isinstance(profile.skills, list) else []
+            experience = profile.experience if isinstance(profile.experience, list) else []
+            education = profile.education if isinstance(profile.education, list) else []
+            phone = profile.phone or ''
+            about = profile.about or ''
+            location = profile.location or ''
+
+        # Applicant profile fields
+        ret['applicant_phone'] = phone
+        ret['applicant_photo'] = photo_url
+        ret['applicant_resume'] = resume_url
+        ret['applicant_resume_name'] = resume_name
+        ret['applicant_skills'] = skills
+        ret['applicant_experience'] = experience
+        ret['applicant_education'] = education
+        ret['applicant_about'] = about
+        ret['applicant_location'] = location
+
+        # CamelCase convenience fields for frontend components
+        ret['jobId'] = str(obj.job_id)
+        ret['jobTitle'] = obj.job.title if obj.job else ''
+        ret['companyName'] = obj.job.company.name if (obj.job and obj.job.company) else ''
+        ret['companyLogo'] = obj.job.company.logo.url if (obj.job and obj.job.company and obj.job.company.logo) else None
+        ret['location'] = obj.job.location if obj.job else ''
+        ret['appliedAt'] = obj.applied_at.isoformat() if obj.applied_at else ''
+        ret['coverLetter'] = obj.cover_letter or ''
+        ret['applicantName'] = obj.applicant.full_name
+        ret['applicantEmail'] = obj.applicant.email
+        ret['applicantPhoto'] = photo_url
+        ret['applicantResume'] = resume_url
+        ret['applicantPhone'] = phone
+        ret['skills'] = skills
+        ret['experience'] = experience
+        ret['experienceList'] = experience
+        ret['education'] = education
+        ret['educationList'] = education
+
+        return ret
 
 class SavedJobSerializer(serializers.ModelSerializer):
     job_details = JobSerializer(source='job', read_only=True)

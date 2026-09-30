@@ -41,5 +41,27 @@ class SeekerSavedJobsView(generics.ListCreateAPIView):
     def get_queryset(self):
         return SavedJob.objects.filter(user=self.request.user).order_by('-created_at')
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        job_id = request.data.get('job') or request.data.get('jobId') or request.data.get('job_id')
+        if not job_id:
+            return Response({'error': 'Job ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            job = Job.objects.get(id=job_id)
+        except (Job.DoesNotExist, ValueError):
+            return Response({'error': 'Job not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        saved_job, created = SavedJob.objects.get_or_create(user=request.user, job=job)
+        serializer = self.get_serializer(saved_job)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+class SeekerSavedJobDeleteView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, job_id=None, *args, **kwargs):
+        if not job_id:
+            return Response({'error': 'Job ID required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        deleted, _ = SavedJob.objects.filter(user=request.user, job_id=job_id).delete()
+        return Response({'saved': False, 'deleted': deleted > 0}, status=status.HTTP_200_OK)
+

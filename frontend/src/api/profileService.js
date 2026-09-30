@@ -1,6 +1,6 @@
 import client from './client';
 import { getMediaUrl } from '@/utils/helpers';
-import { mockJobs } from '@/mock/jobs';
+import { normalizeJob } from './jobService';
 
 export const profileService = {
   // ─── Seeker Profile ────────────────────────────────────────────────────────
@@ -64,15 +64,14 @@ export const profileService = {
   async getSavedJobs() {
     const token = localStorage.getItem('access_token');
     if (!token) {
-      const localSaved = JSON.parse(localStorage.getItem('saved_job_ids') || '[]');
-      return mockJobs.filter((j) => localSaved.includes(j.id));
-    }
-    try {
-      const { data } = await client.get('/job-seekers/saved-jobs/');
-      return Array.isArray(data) ? data.map((item) => item.job_details || item) : [];
-    } catch {
       return [];
     }
+    const { data } = await client.get('/job-seekers/saved-jobs/');
+    const list = Array.isArray(data) ? data : data.results || [];
+    return list.map((item) => {
+      const rawJob = item.job_details || item.job || item;
+      return typeof rawJob === 'object' ? normalizeJob(rawJob) : { id: rawJob };
+    });
   },
 
   async getSavedJobIds() {
@@ -82,10 +81,8 @@ export const profileService = {
     }
     try {
       const { data } = await client.get('/job-seekers/saved-jobs/');
-      if (Array.isArray(data)) {
-        return data.map((item) => String(item.job || item.job_details?.id || item.id));
-      }
-      return [];
+      const list = Array.isArray(data) ? data : data.results || [];
+      return list.map((item) => String(item.job || item.job_details?.id || item.id));
     } catch {
       return [];
     }
@@ -95,39 +92,31 @@ export const profileService = {
     const token = localStorage.getItem('access_token');
     if (!token) {
       const localSaved = JSON.parse(localStorage.getItem('saved_job_ids') || '[]');
-      if (!localSaved.includes(jobId)) {
-        localSaved.push(jobId);
+      if (!localSaved.includes(String(jobId))) {
+        localSaved.push(String(jobId));
         localStorage.setItem('saved_job_ids', JSON.stringify(localSaved));
       }
       return { saved: true };
     }
-    try {
-      const { data } = await client.post('/job-seekers/saved-jobs/', { job: jobId });
-      return { saved: true, data };
-    } catch {
-      return { saved: true };
-    }
+    const { data } = await client.post('/job-seekers/saved-jobs/', { job: jobId });
+    return { saved: true, data };
   },
 
   async unsaveJob(jobId) {
     const token = localStorage.getItem('access_token');
     if (!token) {
       let localSaved = JSON.parse(localStorage.getItem('saved_job_ids') || '[]');
-      localSaved = localSaved.filter((id) => id !== jobId);
+      localSaved = localSaved.filter((id) => id !== String(jobId));
       localStorage.setItem('saved_job_ids', JSON.stringify(localSaved));
       return { saved: false };
     }
-    try {
-      await client.delete(`/job-seekers/saved-jobs/${jobId}/`);
-      return { saved: false };
-    } catch {
-      return { saved: false };
-    }
+    await client.delete(`/job-seekers/saved-jobs/${jobId}/`);
+    return { saved: false };
   },
 
   isSaved(jobId) {
     const localSaved = JSON.parse(localStorage.getItem('saved_job_ids') || '[]');
-    return localSaved.includes(jobId);
+    return localSaved.includes(String(jobId));
   },
 };
 

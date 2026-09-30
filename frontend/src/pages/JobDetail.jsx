@@ -108,7 +108,12 @@ export default function JobDetail() {
           if (compData) setCompany(compData);
           if (seekerProf) setSeekerProfile(seekerProf);
           if (myApps && Array.isArray(myApps)) {
-            const applied = myApps.some((app) => app.jobId === id);
+            const applied = myApps.some(
+              (app) =>
+                String(app.jobId) === String(id) ||
+                String(app.job) === String(id) ||
+                String(app.job_details?.id) === String(id)
+            );
             setHasApplied(applied);
           }
           if (searchParams.get('apply') === 'true') {
@@ -201,7 +206,13 @@ export default function JobDetail() {
       setResumeFile(null);
       toast.success('Application submitted!', `Your application for "${job.title}" has been sent.`);
     } catch (err) {
-      setApplyError(err.message || 'Failed to submit application. Please try again.');
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        (typeof err.response?.data === 'string' ? err.response.data : null) ||
+        err.message ||
+        'Failed to submit application. Please try again.';
+      setApplyError(errMsg);
     } finally {
       setSubmittingApply(false);
     }

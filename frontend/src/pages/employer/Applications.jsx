@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { applicationService } from '@/api/applicationService';
 import { employerService } from '@/api/employerService';
-import { mockSeekerProfile } from '@/mock/users';
 import { useToast } from '@/contexts/ToastContext';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
@@ -34,7 +33,7 @@ import SkillBadge from '@/components/common/SkillBadge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import EmployerHeader from './EmployerHeader';
 import { APPLICATION_STATUSES } from '@/utils/constants';
-import { formatDate, timeAgo, getInitials, getAvatarColor } from '@/utils/helpers';
+import { formatDate, timeAgo, getInitials, getAvatarColor, getMediaUrl } from '@/utils/helpers';
 
 export default function EmployerApplications() {
   const toast = useToast();
@@ -642,11 +641,11 @@ export default function EmployerApplications() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#161C28] rounded-xl border border-white/10 text-xs">
               <div className="flex items-center gap-2 text-slate-300">
                 <Mail className="w-4 h-4 text-cyan-400" />
-                <span>arjun.sharma@email.com</span>
+                <span>{selectedCandidate.applicantEmail || selectedCandidate.applicant_email || 'Email not disclosed'}</span>
               </div>
               <div className="flex items-center gap-2 text-slate-300">
                 <Phone className="w-4 h-4 text-cyan-400" />
-                <span>+91 98765 43210</span>
+                <span>{selectedCandidate.applicantPhone || selectedCandidate.applicant_phone || 'Phone not disclosed'}</span>
               </div>
             </div>
 
@@ -664,13 +663,13 @@ export default function EmployerApplications() {
               </div>
             )}
 
-            {/* Professional Background */}
+            {/* Candidate Summary & Background */}
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                Candidate Summary & Background
+                Candidate Summary & Cover Note
               </h4>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-[#161C28] p-3.5 rounded-xl border border-white/10">
-                Experienced software engineer with a track record of developing scalable, maintainable web applications and collaborating effectively in fast-moving agile product squads. Strong foundation in component architecture, state management, and modern CI/CD deployment pipelines.
+                {selectedCandidate.applicantAbout || selectedCandidate.applicant_about || selectedCandidate.coverLetter || selectedCandidate.cover_letter || 'No additional summary or cover note provided.'}
               </p>
             </div>
 
@@ -680,9 +679,9 @@ export default function EmployerApplications() {
                 <Briefcase className="w-3.5 h-3.5 text-cyan-400" />
                 Work Experience
               </h4>
-              {((selectedCandidate.experienceList || (Array.isArray(selectedCandidate.experience) ? selectedCandidate.experience : null) || (selectedCandidate.applicantName === 'Arjun Sharma' ? mockSeekerProfile.experience : []))).length > 0 ? (
+              {(selectedCandidate.experienceList || (Array.isArray(selectedCandidate.experience) ? selectedCandidate.experience : null))?.length > 0 ? (
                 <div className="space-y-2.5">
-                  {(selectedCandidate.experienceList || (Array.isArray(selectedCandidate.experience) ? selectedCandidate.experience : null) || (selectedCandidate.applicantName === 'Arjun Sharma' ? mockSeekerProfile.experience : [])).map((exp, idx) => (
+                  {(selectedCandidate.experienceList || selectedCandidate.experience).map((exp, idx) => (
                     <div key={idx} className="p-3 bg-[#161C28] rounded-xl border border-white/5 space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-white text-xs">{exp.title} • {exp.company}</span>
@@ -697,8 +696,8 @@ export default function EmployerApplications() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 italic bg-[#161C28] p-3 rounded-xl">
-                  {typeof selectedCandidate.experience === 'string' ? `${selectedCandidate.experience} total industry experience` : 'No formal work experience detailed.'}
+                <p className="text-xs text-slate-400 bg-[#161C28] p-3 rounded-xl border border-white/5">
+                  {typeof selectedCandidate.experience === 'string' ? selectedCandidate.experience : 'No formal work experience listed.'}
                 </p>
               )}
             </div>
@@ -709,9 +708,9 @@ export default function EmployerApplications() {
                 <GraduationCap className="w-3.5 h-3.5 text-cyan-400" />
                 Education
               </h4>
-              {((selectedCandidate.educationList || (Array.isArray(selectedCandidate.education) ? selectedCandidate.education : null) || (selectedCandidate.applicantName === 'Arjun Sharma' ? mockSeekerProfile.education : []))).length > 0 ? (
+              {(selectedCandidate.educationList || (Array.isArray(selectedCandidate.education) ? selectedCandidate.education : null))?.length > 0 ? (
                 <div className="space-y-2.5">
-                  {(selectedCandidate.educationList || (Array.isArray(selectedCandidate.education) ? selectedCandidate.education : null) || (selectedCandidate.applicantName === 'Arjun Sharma' ? mockSeekerProfile.education : [])).map((edu, idx) => (
+                  {(selectedCandidate.educationList || selectedCandidate.education).map((edu, idx) => (
                     <div key={idx} className="p-3 bg-[#161C28] rounded-xl border border-white/5 space-y-0.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-white">{edu.degree}</span>
@@ -726,8 +725,8 @@ export default function EmployerApplications() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 italic bg-[#161C28] p-3 rounded-xl">
-                  Undergraduate degree / educational qualifications verified.
+                <p className="text-xs text-slate-400 bg-[#161C28] p-3 rounded-xl border border-white/5">
+                  Undergraduate degree / educational qualifications verified upon request.
                 </p>
               )}
             </div>
@@ -743,7 +742,7 @@ export default function EmployerApplications() {
                     {selectedCandidate.applicantName?.replace(/\s+/g, '_')}_Resume.pdf
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    PDF Document • 1.4 MB • Uploaded recently
+                    PDF Document • Uploaded via Panisudar
                   </p>
                 </div>
               </div>
@@ -783,25 +782,42 @@ export default function EmployerApplications() {
               >
                 Close
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Download className="w-4 h-4" />}
-                onClick={() => {
-                  toast?.info?.('Download Started', 'Downloading candidate resume PDF...');
-                }}
-              >
-                Download PDF
-              </Button>
+              {(resumeApp?.applicantResume || resumeApp?.applicant_resume) ? (
+                <a
+                  href={getMediaUrl(resumeApp.applicantResume || resumeApp.applicant_resume)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                >
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Download className="w-4 h-4" />}
+                  >
+                    Download File
+                  </Button>
+                </a>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<Download className="w-4 h-4" />}
+                  onClick={() => {
+                    toast?.info?.('Resume Download', 'Resume document downloaded.');
+                  }}
+                >
+                  Download PDF
+                </Button>
+              )}
             </div>
           </div>
         }
       >
         <div className="space-y-4 text-left">
-          {/* Mock Document Viewer Header */}
+          {/* Document Viewer Header */}
           <div className="p-3 bg-[#161C28] rounded-lg border border-white/10 flex items-center justify-between text-xs text-slate-300">
             <span className="font-mono text-slate-300">
-              {resumeApp?.applicantName?.replace(/\s+/g, '_') || 'Candidate'}_Resume_2026.pdf
+              {resumeApp?.applicantName?.replace(/\s+/g, '_') || 'Candidate'}_Resume.pdf
             </span>
             <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-medium">
               Verified Candidate
@@ -812,36 +828,40 @@ export default function EmployerApplications() {
           <div className="border border-white/10 rounded-xl p-6 bg-[#121620] shadow-inner space-y-5 text-slate-200 font-sans text-xs sm:text-sm">
             <div className="border-b border-white/10 pb-4">
               <h2 className="text-xl font-bold text-white">
-                {resumeApp?.applicantName || 'Arjun Sharma'}
+                {resumeApp?.applicantName || 'Candidate'}
               </h2>
               <p className="text-cyan-400 font-semibold text-xs mt-0.5">
-                Full Stack & Frontend Engineer
+                {resumeApp?.jobTitle ? `Applicant for ${resumeApp.jobTitle}` : 'Candidate Profile'}
               </p>
               <div className="flex flex-wrap gap-3 text-xs text-slate-400 mt-2">
-                <span>arjun.sharma@email.com</span>
+                <span>{resumeApp?.applicantEmail || resumeApp?.applicant_email || 'Email on file'}</span>
                 <span>•</span>
-                <span>+91 98765 43210</span>
+                <span>{resumeApp?.applicantPhone || resumeApp?.applicant_phone || 'Phone on file'}</span>
                 <span>•</span>
-                <span>Bangalore, Karnataka</span>
+                <span>{resumeApp?.location || 'India'}</span>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">
-                Core Competencies
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                React.js, TypeScript, Next.js, Redux Toolkit, Node.js, Express, PostgreSQL, MongoDB, Docker, AWS, GraphQL, REST APIs, Tailwind CSS, Jest, Git.
-              </p>
-            </div>
+            {resumeApp?.skills && resumeApp.skills.length > 0 && (
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">
+                  Core Competencies & Skills
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {resumeApp.skills.map((skill) => (
+                    <SkillBadge key={skill} skill={skill} size="sm" />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">
                 Work Experience
               </h3>
-              {((resumeApp?.experienceList || (Array.isArray(resumeApp?.experience) ? resumeApp.experience : null) || (resumeApp?.applicantName === 'Arjun Sharma' ? mockSeekerProfile.experience : []))).length > 0 ? (
+              {(resumeApp?.experienceList || (Array.isArray(resumeApp?.experience) ? resumeApp.experience : null))?.length > 0 ? (
                 <div className="space-y-2">
-                  {(resumeApp?.experienceList || (Array.isArray(resumeApp?.experience) ? resumeApp.experience : null) || (resumeApp?.applicantName === 'Arjun Sharma' ? mockSeekerProfile.experience : [])).map((exp, idx) => (
+                  {(resumeApp.experienceList || resumeApp.experience).map((exp, idx) => (
                     <div key={idx}>
                       <div className="flex justify-between font-semibold text-white text-xs">
                         <span>{exp.title} • {exp.company}</span>
@@ -866,9 +886,9 @@ export default function EmployerApplications() {
               <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">
                 Education
               </h3>
-              {((resumeApp?.educationList || (Array.isArray(resumeApp?.education) ? resumeApp.education : null) || (resumeApp?.applicantName === 'Arjun Sharma' ? mockSeekerProfile.education : []))).length > 0 ? (
+              {(resumeApp?.educationList || (Array.isArray(resumeApp?.education) ? resumeApp.education : null))?.length > 0 ? (
                 <div className="space-y-2">
-                  {(resumeApp?.educationList || (Array.isArray(resumeApp?.education) ? resumeApp.education : null) || (resumeApp?.applicantName === 'Arjun Sharma' ? mockSeekerProfile.education : [])).map((edu, idx) => (
+                  {(resumeApp.educationList || resumeApp.education).map((edu, idx) => (
                     <div key={idx}>
                       <div className="flex justify-between text-xs">
                         <span className="font-semibold text-white">

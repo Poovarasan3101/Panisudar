@@ -1,42 +1,25 @@
 /**
- * Company Service — mock + real API stubs
+ * Company Service — Connected to real Django REST API
  * Django endpoints: GET /api/companies/, GET /api/companies/:id/
  */
 
-import { mockCompanies } from '@/mock/companies';
-import { mockJobs } from '@/mock/jobs';
-
-const USE_MOCK = true;
-const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
+import client from './client';
 
 export const companyService = {
   async getCompanies(params = {}) {
-    if (USE_MOCK) {
-      await delay();
-      let companies = [...mockCompanies];
-      if (params.search) {
-        const q = params.search.toLowerCase();
-        companies = companies.filter(
-          (c) => c.name.toLowerCase().includes(q) || c.industry.toLowerCase().includes(q),
-        );
-      }
-      if (params.industry) {
-        companies = companies.filter((c) => c.industry === params.industry);
-      }
-      return companies;
-    }
-    // const { data } = await client.get('/companies/', { params }); return data;
+    const { data } = await client.get('/companies/', { params });
+    return Array.isArray(data) ? data : data.results || [];
   },
 
   async getCompanyById(id) {
-    if (USE_MOCK) {
-      await delay();
-      const company = mockCompanies.find((c) => c.id === id);
-      if (!company) throw new Error('Company not found');
-      const jobs = mockJobs.filter((j) => j.companyId === id && j.isActive);
+    const { data: company } = await client.get(`/companies/${id}/`);
+    try {
+      const { data: jobsData } = await client.get('/jobs/', { params: { company: id } });
+      const jobs = Array.isArray(jobsData) ? jobsData : jobsData.results || [];
       return { ...company, jobs };
+    } catch {
+      return { ...company, jobs: [] };
     }
-    // const { data } = await client.get(`/companies/${id}/`); return data;
   },
 };
 

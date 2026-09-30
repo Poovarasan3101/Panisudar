@@ -1,43 +1,40 @@
 /**
- * Notification Service — mock + real API stubs
- * Django endpoint: GET /api/notifications/
+ * Notification Service — Connected to real Django REST API
+ * Django endpoints:
+ *   GET   /api/notifications/
+ *   GET   /api/notifications/unread-count/
+ *   POST  /api/notifications/mark-all-read/
+ *   PATCH /api/notifications/:id/
  */
 
-import { mockNotifications } from '@/mock/applications';
-
-const USE_MOCK = true;
-const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
-
-let _notifications = [...mockNotifications];
+import client from './client';
 
 export const notificationService = {
   async getNotifications() {
-    if (USE_MOCK) {
-      await delay();
-      return [..._notifications].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-    // const { data } = await client.get('/notifications/'); return data;
+    const { data } = await client.get('/notifications/');
+    return Array.isArray(data) ? data : data.results || [];
   },
 
   async markAsRead(notificationId) {
-    if (USE_MOCK) {
-      const notif = _notifications.find((n) => n.id === notificationId);
-      if (notif) notif.isRead = true;
-      return { success: true };
-    }
-    // await client.patch(`/notifications/${notificationId}/`, { isRead: true });
+    const { data } = await client.patch(`/notifications/${notificationId}/`, {
+      is_read: true,
+      isRead: true,
+    });
+    return data;
   },
 
   async markAllAsRead() {
-    if (USE_MOCK) {
-      _notifications.forEach((n) => { n.isRead = true; });
-      return { success: true };
-    }
-    // await client.post('/notifications/mark-all-read/');
+    const { data } = await client.post('/notifications/mark-all-read/');
+    return data;
   },
 
-  getUnreadCount() {
-    return _notifications.filter((n) => !n.isRead).length;
+  async getUnreadCount() {
+    try {
+      const { data } = await client.get('/notifications/unread-count/');
+      return data.unreadCount ?? data.unread_count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 };
 

@@ -175,5 +175,18 @@ export function getMediaUrl(url) {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
     return url;
   }
-  return url.startsWith('/') ? url : `/${url}`;
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+
+  // If VITE_API_URL is configured with external host, prepend origin for media files
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
+    try {
+      const origin = new URL(apiUrl).origin;
+      return `${origin}${cleanPath}`;
+    } catch {
+      // fallback
+    }
+  }
+  return cleanPath;
 }
+

@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/applications/', include('apps.applications.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/ai-resume/', include('apps.ai_resume.urls')),
+    path('api/chat/', include('apps.accounts.chat_urls')),
 ]
 
 if settings.DEBUG:

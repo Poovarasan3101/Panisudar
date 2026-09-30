@@ -10,3 +10,8 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def get_active_jobs(self, obj):
         return obj.jobs.filter(is_active=True).count()
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['activeJobs'] = ret.get('active_jobs', 0)
+        return ret

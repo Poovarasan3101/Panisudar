@@ -36,22 +36,34 @@ client.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Do not attempt refresh on login or token refresh endpoints
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/token/') || originalRequest?.url?.includes('/auth/login/');
+
     // Attempt token refresh on 401
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       const refresh = localStorage.getItem('refresh_token');
       if (refresh) {
         try {
-          const res = await axios.post('/api/auth/token/refresh/', { refresh });
+          const apiBase = import.meta.env.VITE_API_URL || '/api';
+          const refreshUrl = apiBase.endsWith('/')
+            ? `${apiBase}auth/token/refresh/`
+            : `${apiBase}/auth/token/refresh/`;
+
+          const res = await axios.post(refreshUrl, { refresh });
           const newAccess = res.data.access;
           localStorage.setItem('access_token', newAccess);
           originalRequest.headers.Authorization = `Bearer ${newAccess}`;
           return client(originalRequest);
-        } catch {
+        } catch (refreshErr) {
           // Refresh failed — clear auth
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          localStorage.removeItem('user');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshErr);
         }
       }
     }

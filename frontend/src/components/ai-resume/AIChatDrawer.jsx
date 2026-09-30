@@ -94,7 +94,7 @@ export default function AIChatDrawer({ resume, isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[460px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
+    <div className="fixed inset-y-0 right-0 z-50 w-full  sm:w-[460px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
       {/* Top Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export default function AIChatDrawer({ resume, isOpen, onClose }) {
             <Bot className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+            <h3 className="text-sm font-bold text-white flex items-center  gap-1.5">
               Panisudar AI Assistant
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </h3>

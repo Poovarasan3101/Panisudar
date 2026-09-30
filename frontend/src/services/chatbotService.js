@@ -95,10 +95,26 @@ export const chatbotService = {
       return { reply: "I didn't catch that. How can I assist your job search or hiring today?", source: 'fallback' };
     }
 
+    // 1. First try Django backend chatbot endpoint (/api/chat/)
+    try {
+      const { data } = await client.post('/chat/', {
+        message: trimmed,
+        history: history.slice(-6).map((msg) => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text,
+        })),
+      });
+      if (data && data.reply) {
+        return { reply: data.reply, source: data.source || 'backend' };
+      }
+    } catch (err) {
+      // Backend chat endpoint unavailable or errored, proceed to other options
+    }
+
+    // 2. If an external AI API is configured via environment variables
     const apiUrl = import.meta.env.VITE_AI_CHAT_API_URL;
     const apiKey = import.meta.env.VITE_AI_CHAT_API_KEY;
 
-    // If an external AI API is configured via environment variables
     if (apiUrl) {
       try {
         const response = await fetch(apiUrl, {
